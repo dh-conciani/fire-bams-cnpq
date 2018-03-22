@@ -2,7 +2,7 @@
 //Aitor Bastarrika aitor.bastarrika@ehu.eus
 //L5 and 7 Implemented by Dhemerson Conciani (dh.conciani@gmail.com)
 
-//******************* Start parameters
+//******************* Start parameters//
 //Composite start and end date
 var date_start='2016-01-01' 
 var date_end='2017-01-01'
