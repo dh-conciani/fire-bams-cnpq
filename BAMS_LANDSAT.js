@@ -1,15 +1,14 @@
-// Burned Area Mapping Software - BAMS - Aitor Bastarika 
-// GEE jscript - Dhemerson Conciani, Daniel Borini Alves, Swanni Alvarado 
-
-// Set train spatialDataFrame (can be pols, lines, points)
+// BAMS for Landsat collections (TM/ETM/OLI)
+// Dhemerson Conciani; Daniel Borini; Swanni Alvarado 
+// Originally developed in GEE by Aitor Bastarika for Sentinel 2
 // var Burned= Training polygons
 
 // Define time interval to composite scenes
-var date_start="2016-01-01";
-var date_end="2016-12-30";
+var date_start="2000-02-01";
+var date_end="2000-12-30";
 
-// Define function to mask radiometric annomalies, clouds and shadows using "pixel_qa" band 
-// Landsat 5 (TM) and Landsat 7 (ETM+)
+// define mask functions
+// landsat 5 and landsat 7
 var cloudMaskL457 = function(image) {
   var qa = image.select('pixel_qa');
   // If the cloud bit (5) is set and the cloud confidence (7) is high
@@ -22,7 +21,7 @@ var cloudMaskL457 = function(image) {
   return image.updateMask(cloud.not()).updateMask(mask2);
 };
 
-// Landsat 8
+// landsat 8
 function maskL8sr(image) {
   // Bits 3 and 5 are cloud shadow and cloud, respectively.
   var cloudShadowBitMask = (1 << 3);
@@ -35,25 +34,25 @@ function maskL8sr(image) {
   return image.updateMask(mask);
 }
 
-// Set interest area, create a spatialDataFrame var named "Region"
-// If not specified, the screen extent are taked
+// If you wanna run the algorithm to a specific area, create var named "Region"
+// By default, the screen extent are taked
 
-// Import collections
-// Landsat 5 - TM
+// import collections
+// landsat 5 - TM
 var L5coll = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR') 
 .select(['B1', 'B3', 'B4', 'B5', 'B7', 'pixel_qa']) 
 .filterBounds(Region)
 .filterDate(date_start,date_end)
 .map (cloudMaskL457);
 
-// Landsat 7 - ETM
+// landsat 7 - ETM
 var L7coll = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR')
 .select(['B1', 'B3', 'B4', 'B5', 'B7', 'pixel_qa'])
 .filterBounds(Region)
 .filterDate(date_start,date_end)
 .map (cloudMaskL457);
 
-// Landsat 8 - OLI
+// landsat 8 - OLI
 var L8coll = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR')
 .filterBounds(Region)
 .filterDate(date_start,date_end)
@@ -63,8 +62,9 @@ var L8coll = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR')
 })
 .select(['B1', 'B3', 'B4', 'B5', 'B7', 'pixel_qa']);
 
-// Merge collections (TM, ETM+, OLI)
+// merge collections 
 var image_collection_type = ee.ImageCollection(L5coll.merge(L7coll).merge(L8coll));
+//var image_collection_type = ee.ImageCollection(L5coll.merge(L7coll));
 print (image_collection_type)
 
 // define band names
@@ -220,5 +220,5 @@ Map.addLayer (BA_vectors)
 // export vector
 Export.table.toDrive({
   collection: BA_vectors, 
-  description: '_BA_L8L7_ESEC', 
+  description: '2000_BA_L7L5_ESEC', 
   folder: 'BA_ESEC'});
