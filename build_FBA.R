@@ -15,11 +15,11 @@ library (maptools)
 ## read lim
 #lim <- readOGR ("./esec_serra_geral/shp_lim","esec23s")
 ## read points
-omission_points <- readOGR ("./esec_serra_geral/post_proc", "2014_ommit_points")
+omission_points <- readOGR ("./esec_serra_geral/post_proc", "2006_ommit_points")
 ## read poly
-BA <- readOGR ("./esec_serra_geral/BA_BAMS_RAW", "2014_BA_L8L7_ESEC")
+BA <- readOGR ("./esec_serra_geral/BA_BAMS_RAW", "2006_BA_L7L5_ESEC")
 ## read reference raster to create cellsize
-ref_raster <- raster ("./esec_serra_geral/maxNBRidx/2014_L8L7_MAXNBR_INDEX_ESEC.tif")
+ref_raster <- raster ("./esec_serra_geral/maxNBRidx/2018_L8L7_MAXNBR_INDEX_ESEC.tif")
 
 ## reproject BAMs output to same CRS of points
 BA <- spTransform(BA, crs(omission_points))
@@ -31,7 +31,7 @@ rm(ref_raster);gc()
 
 ## extract only polygons to dissolve by neighbour
 dis_neigh <- subset (omission_points, POINTID== 0, drop =TRUE)
-dis_neigh$POINTID <- as.numeric (dis_neigh$POINTID)
+dis_neigh$POINTID <- as.numeric (1)
 
 ## rasterize only to neighbours
 r_neigh <- rasterize (dis_neigh, mask_ref, dis_neigh$POINTID)
@@ -43,8 +43,9 @@ cols <- colnames(as.data.frame(BA[1:4]))
 pol_neigh@data[,2:4] <- c(NA,NA,NA)
 colnames(pol_neigh@data) <- cols
 
+
 ## create search points and associate with polygon attributes
-rp <- spsample(BA,n=100000,type="regular")
+rp <- spsample(BA,n=25000,type="regular")
 rp2 <- point.in.poly(rp,BA)
 
 # search for nearest point (with radius)
@@ -65,6 +66,9 @@ gBA@data <- gBA@data[1]
 # create empty recipe
 fPol <- SpatialPolygons(list())
 projection(fPol) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+## convert date to levels
+gBA$date <- as.factor(gBA$date)
 
 ## start function
 list_count = length (levels(gBA$date))
@@ -105,6 +109,7 @@ pol$area <- area (pol) ## calc area in ~meters
 
 # bind 
 BAf <- bind (fPol, pol)
+BAf@data$year <- 2006
 
 ## export final BA
-writeOGR(BAf, dsn=".", layer= "2014_ESEC_finalBA", driver= "ESRI Shapefile")
+writeOGR(BAf, dsn=".", layer= "2006_ESEC_finalBA", driver= "ESRI Shapefile")
